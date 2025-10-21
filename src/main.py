@@ -32,6 +32,37 @@ def manhattan(current_state):
 
 # returns possible states for a given "current_state"
 def neighbors(current_state):
+    rows = len(current_state)
+    columns = len(current_state[0])
+    null_pos_row = None
+    null_pos_col = None
+    possible_moves = ['u', 'd', 'r', 'l']   # up, down, right, left
+
+    # get the position/coordinates of the "null" ( 0 ) element inside the board
+    for row in range(rows):
+        for column in range(columns):
+            if current_state[row][column] == 0:
+                null_pos_row = row
+                null_pos_col = column
+                print(f"Found null at board position:")
+                print(f"[{null_pos_row}:{null_pos_col}]")
+
+    # check where "null" ( 0 ) element can move to in next iteration
+    if null_pos_row == (rows - 1):      # on bottom-most edge, cannot move down
+        possible_moves.remove('d')
+    if null_pos_row == 0:             # on top-most edge, cannot move up
+        possible_moves.remove('u')
+    if null_pos_col == (columns - 1): # on right-most edge, cannot move right
+        possible_moves.remove('r')
+    if null_pos_col == 0:             # on left-most edge, cannot move left
+        possible_moves.remove('l')
+
+    # for debugging only:
+    print(f"{current_state[0]}\n{current_state[1]}\n{current_state[2]}")
+    print("Available moves: ")
+    print(possible_moves)
+    # -------------------
+
     return None
 
 
@@ -90,6 +121,8 @@ if __name__ == "__main__":
 
     log.info("Found solvable board.")
     log.debug(f"Board: {start_state}")
+
+    neighbors(start_state) 
 
     log.info("Application end. (exit: 0, program finished)")
     exit(0)
