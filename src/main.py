@@ -107,8 +107,13 @@ def neighbors(current_state):
 
 
 # provide list with states, calculates cost for each state f(s) = g(s) + h(s)
-def calculateCosts(possible_states):
-    return None
+def calculateCosts(possible_states, g_cost=0):
+    state_costs = []
+    for state in possible_states:
+        h_cost = manhattan(state)
+        f_cost = g_cost + h_cost   # f(s) = g(s) + h(s)
+        state_costs.append((state, f_cost))
+    return state_costs
 
 
 # checks if state is solvable or not
