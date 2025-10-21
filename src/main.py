@@ -5,13 +5,16 @@ import random
 import logging
 
 
-# setup logger for debugging (creates a logfile in ./log/ directory)
+# setup logger for debugging (creates a logfile in ../log/ directory)
 time_stamp = time.strftime("%Y-%m-%d_%H-%M-%S")
 logging.basicConfig(level=logging.DEBUG, 
                     format='%(asctime)s - [%(levelname)s] %(message)s',
                     datefmt='%Y-%m-%d,%H:%M:%S',
-                    filename=os.path.join('log', f'{time_stamp}_logfile.log'))
+                    filename=os.path.abspath(
+                        os.path.join(os.path.dirname(__file__),
+                        os.pardir, 'log', f'{time_stamp}_logfile.log')))
 log = logging.getLogger(__name__)
+
 
 
 # definition of the goal state, as defined in task slides on Moodle
