@@ -5,12 +5,14 @@ import random
 import logging
 
 
-# setup logger for debugging (creates a logfile in ./log/ directory)
+# setup logger for debugging (creates a logfile in ../log/ directory)
 time_stamp = time.strftime("%Y-%m-%d_%H-%M-%S")
 logging.basicConfig(level=logging.DEBUG, 
                     format='%(asctime)s - [%(levelname)s] %(message)s',
                     datefmt='%Y-%m-%d,%H:%M:%S',
-                    filename=os.path.join('log', f'{time_stamp}_logfile.log'))
+                    filename=os.path.abspath(
+                        os.path.join(os.path.dirname(__file__),
+                        os.pardir, 'log', f'{time_stamp}_logfile.log')))
 log = logging.getLogger(__name__)
 
 
@@ -34,27 +36,28 @@ def manhattan(current_state):
 def neighbors(current_state):
     rows = len(current_state)
     columns = len(current_state[0])
-    null_pos_row = None
-    null_pos_col = None
+    null_row = None
+    null_col = None
     possible_moves = ['u', 'd', 'r', 'l']   # up, down, right, left
+    possible_states = []
 
     # get the position/coordinates of the "null" ( 0 ) element inside the board
     for row in range(rows):
         for column in range(columns):
             if current_state[row][column] == 0:
-                null_pos_row = row
-                null_pos_col = column
+                null_row = row
+                null_col = column
                 print(f"Found null at board position:")
-                print(f"[{null_pos_row}:{null_pos_col}]")
+                print(f"[{null_row}:{null_col}]")
 
     # check where "null" ( 0 ) element can move to in next iteration
-    if null_pos_row == (rows - 1):      # on bottom-most edge, cannot move down
+    if null_row == (rows - 1):      # on bottom-most edge, cannot move down
         possible_moves.remove('d')
-    if null_pos_row == 0:             # on top-most edge, cannot move up
+    if null_row == 0:               # on top-most edge, cannot move up
         possible_moves.remove('u')
-    if null_pos_col == (columns - 1): # on right-most edge, cannot move right
+    if null_col == (columns - 1):   # on right-most edge, cannot move right
         possible_moves.remove('r')
-    if null_pos_col == 0:             # on left-most edge, cannot move left
+    if null_col == 0:               # on left-most edge, cannot move leftI
         possible_moves.remove('l')
 
     # for debugging only:
@@ -62,6 +65,26 @@ def neighbors(current_state):
     print("Available moves: ")
     print(possible_moves)
     # -------------------
+
+    # create a list of possible states, given the possible moves
+    for direction in possible_moves:
+        new_state = current_state.copy()
+        swap_row = null_row
+        swap_col = null_col
+        if direction == 'd':
+            swap_row = null_row + 1
+        elif direction == 'u':
+            swap_row = null_row - 1
+        elif direction == 'r':
+            swap_col = null_col + 1
+        elif direction == 'l':
+            swap_col = null_col - 1
+        new_state[null_row][null_col] = new_state[swap_row][swap_col]
+        new_state[swap_row][swap_col] = 0
+        possible_states.append(new_state)
+        print("_new possible state_")
+        print(f"{new_state[0]}\n{new_state[1]}\n{new_state[2]}")
+        print("__________________")
 
     return None
 
