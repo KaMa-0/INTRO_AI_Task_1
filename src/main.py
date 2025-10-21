@@ -1,6 +1,7 @@
 import os
 import time
 import math
+import copy
 import random
 import logging
 
@@ -56,7 +57,53 @@ def manhattan(current_state):
 
 # returns possible states for a given "current_state"
 def neighbors(current_state):
-    return None
+    rows = len(current_state)
+    columns = len(current_state[0])
+    null_row = None
+    null_col = None
+    possible_moves = ['u', 'd', 'r', 'l']   # up, down, right, left
+    possible_states = []
+
+    # get the position/coordinates of the "null" ( 0 ) element inside the board
+    for row in range(rows):
+        for column in range(columns):
+            if current_state[row][column] == 0:
+                null_row = row
+                null_col = column
+                log.debug(f"Found null at board position:")
+                log.debug(f"[{null_row}:{null_col}]")
+
+    # check where "null" ( 0 ) element can move to in next iteration
+    if null_row == (rows - 1):      # on bottom-most edge, cannot move down
+        possible_moves.remove('d')
+    if null_row == 0:               # on top-most edge, cannot move up
+        possible_moves.remove('u')
+    if null_col == (columns - 1):   # on right-most edge, cannot move right
+        possible_moves.remove('r')
+    if null_col == 0:               # on left-most edge, cannot move leftI
+        possible_moves.remove('l')
+
+    log.debug("Available moves: ")
+    log.debug(possible_moves)
+
+    # create a list of possible states, given the possible moves
+    for direction in possible_moves:
+        new_state = copy.deepcopy(current_state)
+        swap_row = null_row
+        swap_col = null_col
+        if direction == 'd':
+            swap_row = null_row + 1
+        elif direction == 'u':
+            swap_row = null_row - 1
+        elif direction == 'r':
+            swap_col = null_col + 1
+        elif direction == 'l':
+            swap_col = null_col - 1
+        new_state[null_row][null_col] = new_state[swap_row][swap_col]
+        new_state[swap_row][swap_col] = 0
+        possible_states.append(new_state)
+
+    return possible_states
 
 
 # provide list with states, calculates cost for each state f(s) = g(s) + h(s)
@@ -114,6 +161,10 @@ if __name__ == "__main__":
 
     log.info("Found solvable board.")
     log.debug(f"Board: {start_state}")
+
+    states = neighbors(start_state) 
+    for state in states:
+        log.debug(f"\n-- possible state --\n{state[0]}\n{state[1]}\n{state[2]}")
 
     log.info("Application end. (exit: 0, program finished)")
     exit(0)
