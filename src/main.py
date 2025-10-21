@@ -162,6 +162,10 @@ if __name__ == "__main__":
     log.info("Found solvable board.")
     log.debug(f"Board: {start_state}")
 
+    hamming_distance = hamming(start_state)
+    log.info(f"Hamming distance of generated board: {hamming_distance}")
+    log.debug(f"Goal state: {goal_state}")
+
     states = neighbors(start_state) 
     for state in states:
         log.debug(f"\n-- possible state --\n{state[0]}\n{state[1]}\n{state[2]}")
