@@ -22,7 +22,17 @@ goal_state = [[ 0, 1, 2 ],
 
 # calculate hamming distance of a given "current_state"
 def hamming(current_state):
-    return None
+    misplaced_count = 0
+    for row in range(3):
+        for col in range(3):
+            current_tile = current_state[row][col]
+            goal_tile = goal_state[row][col]
+            if current_tile == 0:
+                continue
+            if current_tile != goal_tile:
+                misplaced_count += 1
+    return misplaced_count
+
 
 
 # calculate manhattan distance of a given "current_state"
