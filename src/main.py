@@ -1,9 +1,22 @@
+import os
+import time
 import math
+import random
+import logging
+
+
+# setup logger for debugging (creates a logfile in ./log/ directory)
+time_stamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+logging.basicConfig(level=logging.DEBUG, 
+                    format='%(asctime)s - [%(levelname)s] %(message)s',
+                    datefmt='%Y-%m-%d,%H:%M:%S',
+                    filename=os.path.join('log', f'{time_stamp}_logfile.log'))
+log = logging.getLogger(__name__)
 
 
 # definition of the goal state, as defined in task slides on Moodle
-goal_state = [[ 0, 1, 2 ], 
-              [ 3, 4, 5 ], 
+goal_state = [[ 0, 1, 2 ],
+              [ 3, 4, 5 ],
               [ 6, 7, 8 ]]
 
 
@@ -29,19 +42,54 @@ def calculateCosts(possible_states):
 
 # checks if state is solvable or not
 def is_solvable(start_state):
-    return None
+    inv_count = 0
+    value_array = []
+    
+    # create an array which stores all the values of the board in order
+    for row in start_state:
+        for value in row:
+            value_array.append(value)
+
+    # sum all the inversions of each element in the ordered array of values
+    n = len(value_array)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if value_array[i] > value_array[j]:
+                inv_count += 1
+     
+    # give back the solvability depending on if number of inversions even/odd
+    return (inv_count % 2 == 0)
 
 
 # generate a random start_state for the board
 def generateRandomSolvableBoard():
-    return None
+    possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+    next_value = 0
+    new_board = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
+    
+    # create a randomly shuffled list based on all possible values (for 8puzzle)
+    random.shuffle(possible_values)
+
+    # fill the new_board with the next (random) value from the shuffled list
+    for row in range(len(new_board)):
+        for column in range(len(new_board[row])):
+            new_board[row][column] = possible_values[next_value]
+            next_value += 1
+
+    return new_board
 
 
 if __name__ == "__main__":
-    print("Hello World")
+    log.info("Application start.")
+    start_state = generateRandomSolvableBoard();
 
-    start_state = generateRandomSolvableBoard();    
-    if not is_solvable(start_state):
-        exit(2)
+    # check if start_state is solvable, generate a new one in case it isn't
+    while not is_solvable(start_state):
+        log.debug(f"Generated unsolvable board : {start_state}")
+        start_state = generateRandomSolvableBoard()
 
+    log.info("Found solvable board.")
+    log.debug(f"Board: {start_state}")
+
+    log.info("Application end. (exit: 0, program finished)")
     exit(0)
