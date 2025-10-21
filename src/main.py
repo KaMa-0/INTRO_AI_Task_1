@@ -40,7 +40,18 @@ def hamming(current_state):
 
 # calculate manhattan distance of a given "current_state"
 def manhattan(current_state):
-    return None
+    total_distance = 0
+    for row in range(3):
+        for col in range(3):
+            current_tile = current_state[row][col]
+            if current_tile == 0:
+                continue  # Skip the blank tile
+            # calculate the goal position of the current tile
+            goal_row = current_tile // 3
+            goal_col = current_tile % 3
+            # add the Manhattan distance for this tile
+            total_distance += abs(row - goal_row) + abs(col - goal_col)
+    return total_distance
 
 
 # returns possible states for a given "current_state"
