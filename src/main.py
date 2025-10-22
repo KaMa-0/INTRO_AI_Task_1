@@ -78,7 +78,7 @@ def neighbors(current_state):
         possible_moves.remove('d')
     if null_row == 0:               # on top-most edge, cannot move up
         possible_moves.remove('u')
-    if null_col == (cols - 1):   # on right-most edge, cannot move right
+    if null_col == (cols - 1):      # on right-most edge, cannot move right
         possible_moves.remove('r')
     if null_col == 0:               # on left-most edge, cannot move leftI
         possible_moves.remove('l')
@@ -163,9 +163,10 @@ def generateRandomSolvableBoard():
 
 if __name__ == "__main__":
     log.info("Application start.")
-
+    
     games_to_generate = 100
 
+    # generate desired amount of "games", i.e. start_states -> goal_state
     for game_id in range(games_to_generate):
         log.info(f"Creating game with ID {game_id}")
         start_state = generateRandomSolvableBoard();
@@ -178,13 +179,29 @@ if __name__ == "__main__":
         log.info("Found solvable board.")
         log.debug(f"Board: {start_state}")
 
-        hamming_distance = hamming(start_state)
-        log.info(f"Hamming distance of generated board: {hamming_distance}")
-        log.debug(f"Goal state: {goal_state}")
+        # catch (unlikely) event that start_state is goal_state
+        if start_state == goal_state:
+            log.warning("ATTENTION! start_state=goal_state for ID: {game_id}")
 
-        states = neighbors(start_state) 
-        for state in states:
-            log.debug(f"\n-- possible state --\n{state[0]}\n{state[1]}\n{state[2]}")
+        # create a list of possible states in the next step
+        possible_states = neighbors(start_state)
+        log.debug(f"Possible states: {possible_states}")
+
+        # count the iterations/levels of depth in the node-tree
+        level = 0
+        min_cost_index = None
+        nodes = calculateCosts(possible_states, "hamming", level)
+        log.debug(f"With their costs calculated: {nodes}")
+        # evaluate the cost of this list
+        for node_index in range(len(nodes)):
+            state = nodes[node_index][0]
+            cost = nodes[node_index][1]
+            if not min_cost_index:
+                min_cost_index = node_index
+            if cost < nodes[min_cost_index][1] or not min_cost_index:
+                min_cost_index = node_index
+                log.debug(f"New lowest cost node found with state: {state}")
+                log.debug(f"And cost : {cost}")
 
         log.info(f"Game ({game_id+1} has completed.)") 
 
