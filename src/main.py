@@ -58,7 +58,7 @@ def manhattan(current_state):
 # returns possible states for a given "current_state"
 def neighbors(current_state):
     rows = len(current_state)
-    columns = len(current_state[0])
+    cols = len(current_state[0])
     null_row = None
     null_col = None
     possible_moves = ['u', 'd', 'r', 'l']   # up, down, right, left
@@ -66,10 +66,10 @@ def neighbors(current_state):
 
     # get the position/coordinates of the "null" ( 0 ) element inside the board
     for row in range(rows):
-        for column in range(columns):
-            if current_state[row][column] == 0:
+        for col in range(cols):
+            if current_state[row][col] == 0:
                 null_row = row
-                null_col = column
+                null_col = col
                 log.debug(f"Found null at board position:")
                 log.debug(f"[{null_row}:{null_col}]")
 
@@ -78,7 +78,7 @@ def neighbors(current_state):
         possible_moves.remove('d')
     if null_row == 0:               # on top-most edge, cannot move up
         possible_moves.remove('u')
-    if null_col == (columns - 1):   # on right-most edge, cannot move right
+    if null_col == (cols - 1):   # on right-most edge, cannot move right
         possible_moves.remove('r')
     if null_col == 0:               # on left-most edge, cannot move leftI
         possible_moves.remove('l')
@@ -107,10 +107,16 @@ def neighbors(current_state):
 
 
 # provide list with states, calculates cost for each state f(s) = g(s) + h(s)
-def calculateCosts(possible_states, g_cost=0):
+def calculateCosts(possible_states, heuristic, g_cost=0):
     state_costs = []
     for state in possible_states:
-        h_cost = manhattan(state)
+        if heuristic == "manhattan":
+            h_cost = manhattan(state)
+        elif heuristic == "hamming":
+            h_cost = hamming(state)
+        else:
+            log.critical("Selected heuristic for 'calculateCosts' no valid!")
+            exit(11)
         f_cost = g_cost + h_cost   # f(s) = g(s) + h(s)
         state_costs.append((state, f_cost))
     return state_costs
@@ -148,8 +154,8 @@ def generateRandomSolvableBoard():
 
     # fill the new_board with the next (random) value from the shuffled list
     for row in range(len(new_board)):
-        for column in range(len(new_board[row])):
-            new_board[row][column] = possible_values[next_value]
+        for col in range(len(new_board[row])):
+            new_board[row][col] = possible_values[next_value]
             next_value += 1
 
     return new_board
@@ -174,6 +180,17 @@ if __name__ == "__main__":
     states = neighbors(start_state) 
     for state in states:
         log.debug(f"\n-- possible state --\n{state[0]}\n{state[1]}\n{state[2]}")
+
+    # KaMa-0 for DEBUGGING only --> TODO: convert to log after
+    costs = calculateCosts(states, "hamming")
+    print(f"___ costs for hamming ___")
+    for cost in costs:
+        print(f"For: {cost[0]}, cost is: {cost[1]}")
+    costs = calculateCosts(states, "manhattan")
+    print(f"___ costs for manhattan ___")
+    for cost in costs:
+        print(f"For: {cost[0]}, cost is: {cost[1]}")
+    # KaMa-0
 
     log.info("Application end. (exit: 0, program finished)")
     exit(0)
