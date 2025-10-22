@@ -163,34 +163,30 @@ def generateRandomSolvableBoard():
 
 if __name__ == "__main__":
     log.info("Application start.")
-    start_state = generateRandomSolvableBoard();
 
-    # check if start_state is solvable, generate a new one in case it isn't
-    while not is_solvable(start_state):
-        log.debug(f"Generated unsolvable board : {start_state}")
-        start_state = generateRandomSolvableBoard()
+    games_to_generate = 100
 
-    log.info("Found solvable board.")
-    log.debug(f"Board: {start_state}")
+    for game_id in range(games_to_generate):
+        log.info(f"Creating game with ID {game_id}")
+        start_state = generateRandomSolvableBoard();
 
-    hamming_distance = hamming(start_state)
-    log.info(f"Hamming distance of generated board: {hamming_distance}")
-    log.debug(f"Goal state: {goal_state}")
+        # check if start_state is solvable, generate a new one in case it isn't
+        while not is_solvable(start_state):
+            log.debug(f"Generated unsolvable board : {start_state}")
+            start_state = generateRandomSolvableBoard()
 
-    states = neighbors(start_state) 
-    for state in states:
-        log.debug(f"\n-- possible state --\n{state[0]}\n{state[1]}\n{state[2]}")
+        log.info("Found solvable board.")
+        log.debug(f"Board: {start_state}")
 
-    # KaMa-0 for DEBUGGING only --> TODO: convert to log after
-    costs = calculateCosts(states, "hamming")
-    print(f"___ costs for hamming ___")
-    for cost in costs:
-        print(f"For: {cost[0]}, cost is: {cost[1]}")
-    costs = calculateCosts(states, "manhattan")
-    print(f"___ costs for manhattan ___")
-    for cost in costs:
-        print(f"For: {cost[0]}, cost is: {cost[1]}")
-    # KaMa-0
+        hamming_distance = hamming(start_state)
+        log.info(f"Hamming distance of generated board: {hamming_distance}")
+        log.debug(f"Goal state: {goal_state}")
+
+        states = neighbors(start_state) 
+        for state in states:
+            log.debug(f"\n-- possible state --\n{state[0]}\n{state[1]}\n{state[2]}")
+
+        log.info(f"Game ({game_id+1} has completed.)") 
 
     log.info("Application end. (exit: 0, program finished)")
     exit(0)
