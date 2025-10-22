@@ -2,12 +2,12 @@
 INTRO\_AI Task 1 (Group 2 - Team C)  
 
 Functions to implement (ToDo):    
-- [ ] hamming()  
-- [ ] manhattan()  
-- [ ] neighbors()  
-- [ ] isSolvable()  
-- [ ] calculateCosts()  
-- [ ] generateRandomSolvableBoard()  
+- [x] hamming()  
+- [x] manhattan()  
+- [x] neighbors()  
+- [x] isSolvable()  
+- [x] calculateCosts()  
+- [x] generateRandomSolvableBoard()  
 - [ ] runBenchmark()  
 - [ ] use priority queue for open list (states yet to be explored, retrieve node with lowest
 cost 𝑓)  
