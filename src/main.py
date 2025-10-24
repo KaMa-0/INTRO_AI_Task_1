@@ -230,7 +230,6 @@ def solve_puzzle(start_state, heuristic_name):
             end_time = time.time()
             return False, iteration, nodes_expanded, (end_time - start_time)
         
-        # ⭐ find minimum f_cost in dictionary
         min_string = None
         min_f = float('inf')
         for state_string, (state, g, f) in open_dict.items():
@@ -302,7 +301,7 @@ if __name__ == "__main__":
 
         # solve with Manhattan heuristic
         log.info(f"Solving with MANHATTAN heuristic...")
-        success_m, iter_m, nodes_m, time_m = solve_puzzle_astar(start_state, "manhattan")
+        success_m, iter_m, nodes_m, time_m = solve_puzzle(start_state, "manhattan")
         results_manhattan.append({
             'game_id': game_id,
             'success': success_m,
@@ -317,7 +316,7 @@ if __name__ == "__main__":
 
         # solve with Hamming heuristic (same board)
         log.info(f"Solving with HAMMING heuristic...")
-        success_h, iter_h, nodes_h, time_h = solve_puzzle_astar(start_state, "hamming")
+        success_h, iter_h, nodes_h, time_h = solve_puzzle(start_state, "hamming")
         results_hamming.append({
             'game_id': game_id,
             'success': success_h,
