@@ -127,10 +127,11 @@ def is_solvable(start_state):
     inv_count = 0
     value_array = []
     
-    # create an array which stores all the values of the board in order
+    # create an array which stores all the values of the board in order, ignoring the blank tile (0)
     for row in start_state:
         for value in row:
-            value_array.append(value)
+            if value != 0:
+                value_array.append(value)
 
     # sum all the inversions of each element in the ordered array of values
     n = len(value_array)
