@@ -170,7 +170,7 @@ if __name__ == "__main__":
     # generate desired amount of "games", i.e. start_states -> goal_state
     for game_id in range(games_to_generate):
         log.info(f"Creating game with ID {game_id}")
-        start_state = generateRandomSolvableBoard();
+        start_state = generateRandomSolvableBoard()
 
         # check if start_state is solvable, generate a new one in case it isn't
         while not is_solvable(start_state):
