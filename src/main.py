@@ -4,6 +4,7 @@ import math
 import copy
 import random
 import logging
+import heapq
 
 
 # setup logger for debugging (creates a logfile in ../log/ directory)
@@ -26,6 +27,13 @@ goal_state = [[ 0, 1, 2 ],
 
 # calculate hamming distance of a given "current_state"
 def hamming(current_state):
+    """
+    Calculate Hamming distance heuristic.
+    
+    Input: current_state - 3x3 board (list of lists)
+    Output: misplaced_count - number of misplaced tiles (integer)
+    Function: Counts how many tiles are not in their goal position (blank excluded)
+    """
     misplaced_count = 0
     for row in range(3):
         for col in range(3):
@@ -41,73 +49,93 @@ def hamming(current_state):
 
 # calculate manhattan distance of a given "current_state"
 def manhattan(current_state):
+    """
+    Calculate Manhattan distance heuristic.
+    
+    Input: current_state - 3x3 board (list of lists)
+    Output: total_distance - sum of Manhattan distances (integer)
+    Function: Calculates sum of distances of each tile from its goal position
+    """
     total_distance = 0
     for row in range(3):
         for col in range(3):
             current_tile = current_state[row][col]
             if current_tile == 0:
-                continue  # Skip the blank tile
-            # calculate the goal position of the current tile
+                continue
+            # Calculate goal position
             goal_row = current_tile // 3
             goal_col = current_tile % 3
-            # add the Manhattan distance for this tile
+            # Add Manhattan distance
             total_distance += abs(row - goal_row) + abs(col - goal_col)
     return total_distance
 
 
 # returns possible states for a given "current_state"
 def neighbors(current_state):
+    """
+    Generate all possible next states.
+    
+    Input: current_state - 3x3 board
+    Output: possible_states - list of all possible next states
+    Function: Moves blank tile (0) in all valid directions
+    """
     rows = len(current_state)
     cols = len(current_state[0])
-    null_row = None
-    null_col = None
-    possible_moves = ['u', 'd', 'r', 'l']   # up, down, right, left
+    blank_row = None
+    blank_col = None
+    possible_moves = ['u', 'd', 'r', 'l']
     possible_states = []
 
-    # get the position/coordinates of the "null" ( 0 ) element inside the board
+    # Find blank tile (0) position
     for row in range(rows):
         for col in range(cols):
             if current_state[row][col] == 0:
-                null_row = row
-                null_col = col
-                log.debug(f"Found null at board position:")
-                log.debug(f"[{null_row}:{null_col}]")
+                blank_row = row
+                blank_col = col
 
-    # check where "null" ( 0 ) element can move to in next iteration
-    if null_row == (rows - 1):      # on bottom-most edge, cannot move down
+    # Check valid moves
+    if blank_row == (rows - 1):
         possible_moves.remove('d')
-    if null_row == 0:               # on top-most edge, cannot move up
+    if blank_row == 0:
         possible_moves.remove('u')
-    if null_col == (cols - 1):      # on right-most edge, cannot move right
+    if blank_col == (cols - 1):
         possible_moves.remove('r')
-    if null_col == 0:               # on left-most edge, cannot move leftI
+    if blank_col == 0:
         possible_moves.remove('l')
 
-    log.debug("Available moves: ")
-    log.debug(possible_moves)
-
-    # create a list of possible states, given the possible moves
+    # Create new states for each valid move
     for direction in possible_moves:
         new_state = copy.deepcopy(current_state)
-        swap_row = null_row
-        swap_col = null_col
+        swap_row = blank_row
+        swap_col = blank_col
+        
         if direction == 'd':
-            swap_row = null_row + 1
+            swap_row = blank_row + 1
         elif direction == 'u':
-            swap_row = null_row - 1
+            swap_row = blank_row - 1
         elif direction == 'r':
-            swap_col = null_col + 1
+            swap_col = blank_col + 1
         elif direction == 'l':
-            swap_col = null_col - 1
-        new_state[null_row][null_col] = new_state[swap_row][swap_col]
+            swap_col = blank_col - 1
+        
+        # Swap blank with target tile
+        new_state[blank_row][blank_col] = new_state[swap_row][swap_col]
         new_state[swap_row][swap_col] = 0
         possible_states.append(new_state)
 
     return possible_states
 
 
-# provide list with states, calculates cost for each state f(s) = g(s) + h(s)
-def calculateCosts(possible_states, heuristic, g_cost=0):
+def calculateCosts(possible_states, heuristic, g_cost):
+    """
+    Calculate f-cost for each state.
+    
+    Input: possible_states - list of states
+           heuristic - "manhattan" or "hamming"
+           g_cost - current path cost
+    Output: state_costs - list of (state, f_cost) tuples
+    Function: Calculates f(s) = g(s) + h(s) for each state
+    """
     state_costs = []
     for state in possible_states:
         if heuristic == "manhattan":
@@ -115,79 +143,20 @@ def calculateCosts(possible_states, heuristic, g_cost=0):
         elif heuristic == "hamming":
             h_cost = hamming(state)
         else:
-            log.critical("Selected heuristic for 'calculateCosts' no valid!")
+            log.critical("Invalid heuristic for calculateCosts!")
             exit(11)
-        f_cost = g_cost + h_cost   # f(s) = g(s) + h(s)
+        f_cost = g_cost + h_cost
         state_costs.append((state, f_cost))
     return state_costs
 
 
-# checks if state is solvable or not
-def is_solvable(start_state):
-    inv_count = 0
-    value_array = []
-    
-    # create an array which stores all the values of the board in order, ignoring the blank tile (0)
-    for row in start_state:
-        for value in row:
-            if value != 0:
-                value_array.append(value)
-
-    # sum all the inversions of each element in the ordered array of values
-    n = len(value_array)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if value_array[i] > value_array[j]:
-                inv_count += 1
-     
-    # give back the solvability depending on if number of inversions even/odd
-    return (inv_count % 2 == 0)
-
-
-# generate a random start_state for the board
-def generateRandomSolvableBoard():
-    possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 0]
-    next_value = 0
-    new_board = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
-    
-    # create a randomly shuffled list based on all possible values (for 8puzzle)
-    random.shuffle(possible_values)
-
-    # fill the new_board with the next (random) value from the shuffled list
-    for row in range(len(new_board)):
-        for col in range(len(new_board[row])):
-            new_board[row][col] = possible_values[next_value]
-            next_value += 1
-
-    return new_board
-
-def states_are_equal(state1, state2):
-    """
-    Check if two states are equal
-    """
-    for row in range(3):
-        for col in range(3):
-            if state1[row][col] != state2[row][col]:
-                return False
-    return True
-
-
-def state_in_list(state, state_list):
-    """
-    Check if a state exists in a list of states
-    """
-    for s in state_list:
-        if states_are_equal(state, s):
-            return True
-    return False
-
 def state_to_string(state):
     """
-    Convert state to string for fast comparison
+    Convert state to string for comparison.
     
-    Input: state - a 3x3 board
-    Output: string representation
-    Function: Converts board to string like "012345678"
+    Input: state - 3x3 board
+    Output: string representation (e.g., "012345678")
+    Function: Converts board to string for fast comparison
     """
     result = ""
     for row in state:
@@ -196,17 +165,54 @@ def state_to_string(state):
     return result
 
 
+def is_solvable(start_state):
+    """
+    Check if puzzle is solvable.
+    
+    Input: start_state - 3x3 board
+    Output: True if solvable, False otherwise
+    Function: Counts inversions to determine solvability
+    """
+    inv_count = 0
+    value_array = []
+    
+    # Create array without blank tile
+    for row in start_state:
+        for value in row:
+            if value != 0:
+                value_array.append(value)
+
+    # Count inversions
+    n = len(value_array)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if value_array[i] > value_array[j]:
+                inv_count += 1
+     
+    # Solvable if inversions are even
+    return (inv_count % 2 == 0)
+
+
 def solve_puzzle(start_state, heuristic_name):
+    """
+    Solve 8-puzzle using A* algorithm with heapq.
+    
+    Input: start_state - 3x3 board
+           heuristic_name - "manhattan" or "hamming"
+    Output: (success, iterations, nodes_expanded, time_taken)
+    Function: Finds solution using A* with priority queue for efficiency
+    
+    Time Complexity: O(b^d) where b is branching factor, d is solution depth
+    Space Complexity: O(b^d) for storing visited states
+    """
     start_time = time.time()
     
-    if states_are_equal(start_state, goal_state):
+    # Check if already at goal
+    if state_to_string(start_state) == state_to_string(goal_state):
         return True, 0, 0, 0.0
     
-    # open_list: dictionary {state_string: (state, g_cost, f_cost)}
-    open_dict = {}
-    closed_set = set()
-    
-    # calculate initial heuristic
+    # Calculate initial costs
+    g_cost = 0
     if heuristic_name == "manhattan":
         h_cost = manhattan(start_state)
     elif heuristic_name == "hamming":
@@ -214,84 +220,105 @@ def solve_puzzle(start_state, heuristic_name):
     else:
         return False, 0, 0, 0.0
     
-    g_cost = 0
     f_cost = g_cost + h_cost
     start_string = state_to_string(start_state)
-    open_dict[start_string] = (start_state, g_cost, f_cost)
+    
+    # Priority queue: stores (f_cost, counter, state_string, state, g_cost)
+    open_heap = []
+    heapq.heappush(open_heap, (f_cost, 0, start_string, start_state, g_cost))
+    
+    # Track visited states
+    closed_set = set()
     
     nodes_expanded = 0
-    iteration = 0
-    max_iterations = 50000
+    iterations = 0
+    counter = 1  # For tie-breaking in heap
     
-    while len(open_dict) > 0:
-        iteration += 1
+    # Main A* loop
+    while open_heap:
+        iterations += 1
         
-        if iteration > max_iterations:
-            end_time = time.time()
-            return False, iteration, nodes_expanded, (end_time - start_time)
+        # Safety limit
+        if iterations > 25000:
+            return False, iterations, nodes_expanded, time.time() - start_time
         
-        min_string = None
-        min_f = float('inf')
-        for state_string, (state, g, f) in open_dict.items():
-            if f < min_f:
-                min_f = f
-                min_string = state_string
+        # Get state with lowest f_cost from heap
+        current_f, _, current_string, current_state, current_g = heapq.heappop(open_heap)
         
-        # get and remove best node
-        current_state, current_g, current_f = open_dict.pop(min_string)
-        closed_set.add(min_string)
+        # Skip if already visited
+        if current_string in closed_set:
+            continue
+        
+        # Mark as visited
+        closed_set.add(current_string)
         nodes_expanded += 1
         
-        # check goal
-        if states_are_equal(current_state, goal_state):
-            end_time = time.time()
-            return True, iteration, nodes_expanded, (end_time - start_time)
+        # Check if goal reached
+        if current_string == state_to_string(goal_state):
+            return True, iterations, nodes_expanded, time.time() - start_time
         
-        # generate neighbors
-        next_states = neighbors(current_state)
+        # Generate neighbor states
+        neighbor_states = neighbors(current_state)
         
-        for next_state in next_states:
-            next_string = state_to_string(next_state)
+        # Calculate costs for neighbors
+        new_g_cost = current_g + 1
+        neighbor_costs = calculateCosts(neighbor_states, heuristic_name, new_g_cost)
+        
+        # Add neighbors to heap
+        for neighbor_state, neighbor_f in neighbor_costs:
+            neighbor_string = state_to_string(neighbor_state)
             
-            if next_string in closed_set:
+            # Skip if already visited
+            if neighbor_string in closed_set:
                 continue
             
-            new_g = current_g + 1
-            
-            if heuristic_name == "manhattan":
-                h = manhattan(next_state)
-            else:
-                h = hamming(next_state)
-            
-            new_f = new_g + h
-            
-            # ⭐ if in open_dict, update if better
-            if next_string in open_dict:
-                old_g = open_dict[next_string][1]
-                if new_g < old_g:
-                    open_dict[next_string] = (next_state, new_g, new_f)
-            else:
-                # add to open_dict
-                open_dict[next_string] = (next_state, new_g, new_f)
+            # Add to priority queue
+            heapq.heappush(open_heap, (neighbor_f, counter, neighbor_string, neighbor_state, new_g_cost))
+            counter += 1
     
-    end_time = time.time()
-    return False, iteration, nodes_expanded, (end_time - start_time)
+    # No solution found
+    return False, iterations, nodes_expanded, time.time() - start_time
+
+
+def generateRandomSolvableBoard():
+    """
+    Generate random solvable board.
+    
+    Input: None
+    Output: new_board - random 3x3 board
+    Function: Creates random board configuration
+    """
+    possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+    next_value = 0
+    new_board = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
+    
+    # Shuffle values
+    random.shuffle(possible_values)
+
+    # Fill board
+    for row in range(len(new_board)):
+        for col in range(len(new_board[row])):
+            new_board[row][col] = possible_values[next_value]
+            next_value += 1
+
+    return new_board
+
 
 if __name__ == "__main__":
     log.info("Application start.")
     
-    games_to_generate = 10
+    games_to_generate = 100  # Use 100 for full benchmark
     
-    # lists to store results
+    # Store results
     results_manhattan = []
     results_hamming = []
 
-    # generate and solve games
+    # Generate and solve games
     for game_id in range(games_to_generate):
         log.info(f"=== Creating game with ID {game_id} ===")
         start_state = generateRandomSolvableBoard()
 
-        # check if start_state is solvable, generate a new one if not
+        # Check solvability
         while not is_solvable(start_state):
             log.debug(f"Generated unsolvable board, trying again...")
             start_state = generateRandomSolvableBoard()
@@ -299,7 +326,7 @@ if __name__ == "__main__":
         log.info("Found solvable board.")
         log.debug(f"Board: {start_state}")
 
-        # solve with Manhattan heuristic
+        # Solve with Manhattan heuristic
         log.info(f"Solving with MANHATTAN heuristic...")
         success_m, iter_m, nodes_m, time_m = solve_puzzle(start_state, "manhattan")
         results_manhattan.append({
@@ -314,7 +341,7 @@ if __name__ == "__main__":
         else:
             log.warning(f"Manhattan FAILED")
 
-        # solve with Hamming heuristic (same board)
+        # Solve with Hamming heuristic
         log.info(f"Solving with HAMMING heuristic...")
         success_h, iter_h, nodes_h, time_h = solve_puzzle(start_state, "hamming")
         results_hamming.append({
@@ -331,7 +358,7 @@ if __name__ == "__main__":
         
         print(f"Game {game_id+1}/{games_to_generate} completed")
 
-    # calculate statistics for Manhattan
+    # Calculate statistics for Manhattan
     print("\n" + "="*50)
     print("RESULTS - MANHATTAN HEURISTIC")
     print("="*50)
@@ -341,7 +368,7 @@ if __name__ == "__main__":
         avg_nodes_m = sum(r['nodes_expanded'] for r in solved_manhattan) / len(solved_manhattan)
         avg_time_m = sum(r['time'] for r in solved_manhattan) / len(solved_manhattan)
         
-        # calculate standard deviation
+        # Calculate standard deviation
         variance_nodes_m = sum((r['nodes_expanded'] - avg_nodes_m)**2 for r in solved_manhattan) / len(solved_manhattan)
         std_nodes_m = math.sqrt(variance_nodes_m)
         
@@ -354,7 +381,7 @@ if __name__ == "__main__":
     else:
         print("No games solved!")
 
-    # calculate statistics for Hamming
+    # Calculate statistics for Hamming
     print("\n" + "="*50)
     print("RESULTS - HAMMING HEURISTIC")
     print("="*50)
@@ -364,7 +391,7 @@ if __name__ == "__main__":
         avg_nodes_h = sum(r['nodes_expanded'] for r in solved_hamming) / len(solved_hamming)
         avg_time_h = sum(r['time'] for r in solved_hamming) / len(solved_hamming)
         
-        # calculate standard deviation
+        # Calculate standard deviation
         variance_nodes_h = sum((r['nodes_expanded'] - avg_nodes_h)**2 for r in solved_hamming) / len(solved_hamming)
         std_nodes_h = math.sqrt(variance_nodes_h)
         
