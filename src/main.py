@@ -193,6 +193,33 @@ def is_solvable(start_state):
     return (inv_count % 2 == 0)
 
 
+def generateRandomSolvableBoard():
+    """
+    Generate random solvable board.
+    
+    Input: None
+    Output: new_board - random 3x3 board
+    Function: Creates random board configuration
+    """
+    while True:
+        possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+        next_value = 0
+        new_board = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
+        
+        # Shuffle values
+        random.shuffle(possible_values)
+
+        # Fill board
+        for row in range(len(new_board)):
+            for col in range(len(new_board[row])):
+                new_board[row][col] = possible_values[next_value]
+                next_value += 1
+        if is_solvable(new_board):
+            break
+
+    return new_board
+
+
 def solve_puzzle(start_state, heuristic_name):
     """
     Solve 8-puzzle using A* algorithm with heapq.
@@ -239,7 +266,7 @@ def solve_puzzle(start_state, heuristic_name):
         iterations += 1
         
         # Safety limit
-        if iterations > 25000:
+        if iterations > 1000000:
             return False, iterations, nodes_expanded, time.time() - start_time
         
         # Get state with lowest f_cost from heap
@@ -280,30 +307,6 @@ def solve_puzzle(start_state, heuristic_name):
     return False, iterations, nodes_expanded, time.time() - start_time
 
 
-def generateRandomSolvableBoard():
-    """
-    Generate random solvable board.
-    
-    Input: None
-    Output: new_board - random 3x3 board
-    Function: Creates random board configuration
-    """
-    possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 0]
-    next_value = 0
-    new_board = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
-    
-    # Shuffle values
-    random.shuffle(possible_values)
-
-    # Fill board
-    for row in range(len(new_board)):
-        for col in range(len(new_board[row])):
-            new_board[row][col] = possible_values[next_value]
-            next_value += 1
-
-    return new_board
-
-
 if __name__ == "__main__":
     log.info("Application start.")
     
@@ -340,6 +343,7 @@ if __name__ == "__main__":
             log.info(f"Manhattan SUCCESS: nodes={nodes_m}, time={time_m:.4f}s")
         else:
             log.warning(f"Manhattan FAILED")
+            log.warning(f"Unable to find goal_state, given: {start_state}")
 
         # Solve with Hamming heuristic
         log.info(f"Solving with HAMMING heuristic...")
@@ -355,6 +359,7 @@ if __name__ == "__main__":
             log.info(f"Hamming SUCCESS: nodes={nodes_h}, time={time_h:.4f}s")
         else:
             log.warning(f"Hamming FAILED")
+            log.warning(f"Unable to find goal_state, given: {start_state}")
         
         print(f"Game {game_id+1}/{games_to_generate} completed")
 
