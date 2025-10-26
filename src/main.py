@@ -223,22 +223,17 @@ def generateRandomSolvableBoard():
 def solve_puzzle(start_state, heuristic_name):
     """
     Solve 8-puzzle using A* algorithm with heapq.
-    
-    Input: start_state - 3x3 board
-           heuristic_name - "manhattan" or "hamming"
-    Output: (success, iterations, nodes_expanded, time_taken)
-    Function: Finds solution using A* with priority queue for efficiency
-    
-    Time Complexity: O(b^d) where b is branching factor, d is solution depth
-    Space Complexity: O(b^d) for storing visited states
+    Includes parent mapping for optional path reconstruction.
     """
     start_time = time.time()
-    
+    start_string = state_to_string(start_state)
+    goal_string = state_to_string(goal_state)
+
     # Check if already at goal
-    if state_to_string(start_state) == state_to_string(goal_state):
+    if start_string == goal_string:
         return True, 0, 0, 0.0
-    
-    # Calculate initial costs
+
+    # Initialize
     g_cost = 0
     if heuristic_name == "manhattan":
         h_cost = manhattan(start_state)
@@ -246,64 +241,66 @@ def solve_puzzle(start_state, heuristic_name):
         h_cost = hamming(start_state)
     else:
         return False, 0, 0, 0.0
-    
+
     f_cost = g_cost + h_cost
-    start_string = state_to_string(start_state)
-    
-    # Priority queue: stores (f_cost, counter, state_string, state, g_cost)
     open_heap = []
     heapq.heappush(open_heap, (f_cost, 0, start_string, start_state, g_cost))
-    
-    # Track visited states
+
     closed_set = set()
-    
+    parent_map = {start_string: None}   # store each state's parent
+    state_map = {start_string: start_state}  # keep full board to reconstruct later
+
     nodes_expanded = 0
     iterations = 0
-    counter = 1  # For tie-breaking in heap
-    
-    # Main A* loop
+    counter = 1
+
     while open_heap:
         iterations += 1
-        
-        # Safety limit
-        if iterations > 1000000:
+        if iterations > 1_000_000:
             return False, iterations, nodes_expanded, time.time() - start_time
-        
-        # Get state with lowest f_cost from heap
+
         current_f, _, current_string, current_state, current_g = heapq.heappop(open_heap)
-        
-        # Skip if already visited
         if current_string in closed_set:
             continue
-        
-        # Mark as visited
+
         closed_set.add(current_string)
         nodes_expanded += 1
-        
-        # Check if goal reached
-        if current_string == state_to_string(goal_state):
-            return True, iterations, nodes_expanded, time.time() - start_time
-        
-        # Generate neighbor states
-        neighbor_states = neighbors(current_state)
-        
-        # Calculate costs for neighbors
-        new_g_cost = current_g + 1
-        neighbor_costs = calculateCosts(neighbor_states, heuristic_name, new_g_cost)
-        
-        # Add neighbors to heap
-        for neighbor_state, neighbor_f in neighbor_costs:
+
+        if current_string == goal_string:
+            elapsed = time.time() - start_time
+
+            # reconstruct path using parent_map (for optional debugging / printing)
+            path = []
+            s = current_string
+            while s is not None:
+                path.append(s)
+                s = parent_map[s]
+            path.reverse()
+
+            # print solution length (not required)
+            log.info(f"Solution length: {len(path)-1} moves")
+
+            return True, iterations, nodes_expanded, elapsed
+
+        for neighbor_state in neighbors(current_state):
             neighbor_string = state_to_string(neighbor_state)
-            
-            # Skip if already visited
             if neighbor_string in closed_set:
                 continue
-            
-            # Add to priority queue
-            heapq.heappush(open_heap, (neighbor_f, counter, neighbor_string, neighbor_state, new_g_cost))
+
+            new_g = current_g + 1
+            if heuristic_name == "manhattan":
+                h = manhattan(neighbor_state)
+            else:
+                h = hamming(neighbor_state)
+            new_f = new_g + h
+
+            if neighbor_string not in parent_map:
+                parent_map[neighbor_string] = current_string
+                state_map[neighbor_string] = neighbor_state
+
+            heapq.heappush(open_heap, (new_f, counter, neighbor_string, neighbor_state, new_g))
             counter += 1
-    
-    # No solution found
+
     return False, iterations, nodes_expanded, time.time() - start_time
 
 
