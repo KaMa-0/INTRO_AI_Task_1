@@ -304,7 +304,7 @@ def solve_puzzle(start_state, heuristic_name):
     return False, iterations, nodes_expanded, time.time() - start_time
 
 
-def run_benchmark(games_to_generate=100):
+def run_benchmark(games_to_generate=100, heuristics=["manhattan", "hamming"]):
     # Store results
     results_manhattan = []
     results_hamming = []
@@ -323,91 +323,141 @@ def run_benchmark(games_to_generate=100):
         log.debug(f"Board: {start_state}")
 
         # Solve with Manhattan heuristic
-        log.info(f"Solving with MANHATTAN heuristic...")
-        success_m, iter_m, nodes_m, time_m = solve_puzzle(start_state, "manhattan")
-        results_manhattan.append({
-            'game_id': game_id,
-            'success': success_m,
-            'iterations': iter_m,
-            'nodes_expanded': nodes_m,
-            'time': time_m
-        })
-        if success_m:
-            log.info(f"Manhattan SUCCESS: nodes={nodes_m}, time={time_m:.4f}s")
-        else:
-            log.warning(f"Manhattan FAILED")
-            log.warning(f"Unable to find goal_state, given: {start_state}")
+        if "manhattan" in heuristics:
+            log.info(f"Solving with MANHATTAN heuristic...")
+            success_m, iter_m, nodes_m, time_m = solve_puzzle(start_state, "manhattan")
+            results_manhattan.append({
+                'game_id': game_id,
+                'success': success_m,
+                'iterations': iter_m,
+                'nodes_expanded': nodes_m,
+                'time': time_m
+            })
+            if success_m:
+                log.info(f"Manhattan SUCCESS: nodes={nodes_m}, time={time_m:.4f}s")
+            else:
+                log.warning(f"Manhattan FAILED")
+                log.warning(f"Unable to find goal_state, given: {start_state}")
+
+            print(f"Game {game_id+1}/{games_to_generate} completed. (manhattan)")
 
         # Solve with Hamming heuristic
-        log.info(f"Solving with HAMMING heuristic...")
-        success_h, iter_h, nodes_h, time_h = solve_puzzle(start_state, "hamming")
-        results_hamming.append({
-            'game_id': game_id,
-            'success': success_h,
-            'iterations': iter_h,
-            'nodes_expanded': nodes_h,
-            'time': time_h
-        })
-        if success_h:
-            log.info(f"Hamming SUCCESS: nodes={nodes_h}, time={time_h:.4f}s")
+        if "hamming" in heuristics:
+            log.info(f"Solving with HAMMING heuristic...")
+            success_h, iter_h, nodes_h, time_h = solve_puzzle(start_state, "hamming")
+            results_hamming.append({
+                'game_id': game_id,
+                'success': success_h,
+                'iterations': iter_h,
+                'nodes_expanded': nodes_h,
+                'time': time_h
+            })
+            if success_h:
+                log.info(f"Hamming SUCCESS: nodes={nodes_h}, time={time_h:.4f}s")
+            else:
+                log.warning(f"Hamming FAILED")
+                log.warning(f"Unable to find goal_state, given: {start_state}")
+        
+            print(f"Game {game_id+1}/{games_to_generate} completed. (hamming)")
+
+    if "manhattan" in heuristics:
+        # Calculate statistics for Manhattan
+        print("\n" + "="*50)
+        print("RESULTS - MANHATTAN HEURISTIC")
+        print("="*50)
+        
+        solved_manhattan = [r for r in results_manhattan if r['success']]
+        if len(solved_manhattan) > 0:
+            avg_nodes_m = sum(r['nodes_expanded'] for r in solved_manhattan) / len(solved_manhattan)
+            avg_time_m = sum(r['time'] for r in solved_manhattan) / len(solved_manhattan)
+            
+            # Calculate standard deviation
+            variance_nodes_m = sum((r['nodes_expanded'] - avg_nodes_m)**2 for r in solved_manhattan) / len(solved_manhattan)
+            std_nodes_m = math.sqrt(variance_nodes_m)
+            
+            variance_time_m = sum((r['time'] - avg_time_m)**2 for r in solved_manhattan) / len(solved_manhattan)
+            std_time_m = math.sqrt(variance_time_m)
+            
+            print(f"Solved: {len(solved_manhattan)}/{games_to_generate}")
+            print(f"Average nodes expanded: {avg_nodes_m:.2f} ± {std_nodes_m:.2f}")
+            print(f"Average execution time: {avg_time_m:.4f}s ± {std_time_m:.4f}s")
         else:
-            log.warning(f"Hamming FAILED")
-            log.warning(f"Unable to find goal_state, given: {start_state}")
-        
-        print(f"Game {game_id+1}/{games_to_generate} completed")
+            print("No games solved!")
 
-    # Calculate statistics for Manhattan
-    print("\n" + "="*50)
-    print("RESULTS - MANHATTAN HEURISTIC")
-    print("="*50)
-    
-    solved_manhattan = [r for r in results_manhattan if r['success']]
-    if len(solved_manhattan) > 0:
-        avg_nodes_m = sum(r['nodes_expanded'] for r in solved_manhattan) / len(solved_manhattan)
-        avg_time_m = sum(r['time'] for r in solved_manhattan) / len(solved_manhattan)
+    if "hamming" in heuristics:
+        # Calculate statistics for Hamming
+        print("\n" + "="*50)
+        print("RESULTS - HAMMING HEURISTIC")
+        print("="*50)
         
-        # Calculate standard deviation
-        variance_nodes_m = sum((r['nodes_expanded'] - avg_nodes_m)**2 for r in solved_manhattan) / len(solved_manhattan)
-        std_nodes_m = math.sqrt(variance_nodes_m)
-        
-        variance_time_m = sum((r['time'] - avg_time_m)**2 for r in solved_manhattan) / len(solved_manhattan)
-        std_time_m = math.sqrt(variance_time_m)
-        
-        print(f"Solved: {len(solved_manhattan)}/{games_to_generate}")
-        print(f"Average nodes expanded: {avg_nodes_m:.2f} ± {std_nodes_m:.2f}")
-        print(f"Average execution time: {avg_time_m:.4f}s ± {std_time_m:.4f}s")
-    else:
-        print("No games solved!")
-
-    # Calculate statistics for Hamming
-    print("\n" + "="*50)
-    print("RESULTS - HAMMING HEURISTIC")
-    print("="*50)
-    
-    solved_hamming = [r for r in results_hamming if r['success']]
-    if len(solved_hamming) > 0:
-        avg_nodes_h = sum(r['nodes_expanded'] for r in solved_hamming) / len(solved_hamming)
-        avg_time_h = sum(r['time'] for r in solved_hamming) / len(solved_hamming)
-        
-        # Calculate standard deviation
-        variance_nodes_h = sum((r['nodes_expanded'] - avg_nodes_h)**2 for r in solved_hamming) / len(solved_hamming)
-        std_nodes_h = math.sqrt(variance_nodes_h)
-        
-        variance_time_h = sum((r['time'] - avg_time_h)**2 for r in solved_hamming) / len(solved_hamming)
-        std_time_h = math.sqrt(variance_time_h)
-        
-        print(f"Solved: {len(solved_hamming)}/{games_to_generate}")
-        print(f"Average nodes expanded: {avg_nodes_h:.2f} ± {std_nodes_h:.2f}")
-        print(f"Average execution time: {avg_time_h:.4f}s ± {std_time_h:.4f}s")
-    else:
-        print("No games solved!")
+        solved_hamming = [r for r in results_hamming if r['success']]
+        if len(solved_hamming) > 0:
+            avg_nodes_h = sum(r['nodes_expanded'] for r in solved_hamming) / len(solved_hamming)
+            avg_time_h = sum(r['time'] for r in solved_hamming) / len(solved_hamming)
+            
+            # Calculate standard deviation
+            variance_nodes_h = sum((r['nodes_expanded'] - avg_nodes_h)**2 for r in solved_hamming) / len(solved_hamming)
+            std_nodes_h = math.sqrt(variance_nodes_h)
+            
+            variance_time_h = sum((r['time'] - avg_time_h)**2 for r in solved_hamming) / len(solved_hamming)
+            std_time_h = math.sqrt(variance_time_h)
+            
+            print(f"Solved: {len(solved_hamming)}/{games_to_generate}")
+            print(f"Average nodes expanded: {avg_nodes_h:.2f} ± {std_nodes_h:.2f}")
+            print(f"Average execution time: {avg_time_h:.4f}s ± {std_time_h:.4f}s")
+        else:
+            print("No games solved!")
 
     print("\n" + "="*50)
     log.info("Application end. (exit: 0, program finished)")
     exit(0)
 
 
+def get_user_configuration():
+    print("-------------------------------------------------------")
+    print("---              Puzzle 8 Solver                    ---") 
+    print("-------------------------------------------------------")
+    games_to_generate = input("How many puzzles to run/benchmark: ")
+
+    available_heuristics = ["manhattan", "hamming"]
+    os.system('cls' if os.name == 'nt' else 'clear') 
+    selection = [' ', ' ']
+    while True:
+        print("-how_to_select-----------------------------------------\n")
+        print("Make a slection by entering numbers + ENTER to confirm.")
+        print("Then press ENTER to start the benchmark.")
+        print("-------------------------------------------------------\n")
+        print("-current_selection-------------------------------------\n")
+        print(f"(0) [{selection[0]}] {available_heuristics[0]}")
+        print(f"(1) [{selection[1]}] {available_heuristics[1]}")
+        print("-------------------------------------------------------")
+        i = input("\nWhich heuristics to run (min. 1): ")
+        if not i and 'x' in selection:
+            break
+        elif not i and not 'x' in selection:
+            input("MUST SELECT AT LEAST ONE! Press [ENTER] to try again.")
+        elif i.isdigit() and int(i) == 0 or int(i) == 1:
+            if selection[int(i)] == ' ':
+                selection[int(i)] = 'x'
+            else:
+                selection[int(i)] = ' '
+        else:
+            input("INPUT INVALID! Press [ENTER] to try again.")
+        os.system('cls' if os.name == 'nt' else 'clear') 
+
+    heuristics = []
+    for i in range(len(selection)):
+        if selection[i] == 'x':
+            heuristics.append(available_heuristics[i])
+
+    print(f"Will use heuristics: {heuristics}")
+    return games_to_generate, heuristics
+
+
 if __name__ == "__main__":
+    os.system('cls' if os.name == 'nt' else 'clear') 
     log.info("Application start.") 
 
-    run_benchmark(100)
+    # simple user interaction/interface for configuring the benchmark
+    games_to_generate, heuristics = get_user_configuration() 
+    run_benchmark(int(games_to_generate), heuristics)
