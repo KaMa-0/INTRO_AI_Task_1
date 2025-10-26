@@ -307,11 +307,7 @@ def solve_puzzle(start_state, heuristic_name):
     return False, iterations, nodes_expanded, time.time() - start_time
 
 
-if __name__ == "__main__":
-    log.info("Application start.")
-    
-    games_to_generate = 100  # Use 100 for full benchmark
-    
+def run_benchmark(games_to_generate=100):
     # Store results
     results_manhattan = []
     results_hamming = []
@@ -412,3 +408,9 @@ if __name__ == "__main__":
     print("\n" + "="*50)
     log.info("Application end. (exit: 0, program finished)")
     exit(0)
+
+
+if __name__ == "__main__":
+    log.info("Application start.") 
+
+    run_benchmark(100)
