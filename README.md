@@ -1,10 +1,13 @@
 # INTRO\_AI\_Task\_1  
 INTRO\_AI Task 1 (Group 2 - Team C)  
 
-Find the Documentation [here](docs/INTRO_AI_Task_1_Documentation_Kanuric_Sarioglu_Sheikh.pdf)
+---
+## Project Documentation
+
+Find the Documentation [here](docs/INTRO_AI_Task_1_Documentation_Kanuric_Sarioglu_Sheikh.pdf).
 
 ---
-Implementation Checklist:    
+## Implementation Checklist:    
 - [x] hamming()  
 - [x] manhattan()  
 - [x] neighbors()  
