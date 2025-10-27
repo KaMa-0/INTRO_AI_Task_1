@@ -28,11 +28,13 @@ goal_state = [[ 0, 1, 2 ],
 # calculate hamming distance of a given "current_state"
 def hamming(current_state):
     """
-    Calculate Hamming distance heuristic.
-    
-    Input: current_state - 3x3 board (list of lists)
-    Output: misplaced_count - number of misplaced tiles (integer)
-    Function: Counts how many tiles are not in their goal position (blank excluded)
+    @brief Compute the Hamming distance heuristic.
+
+    Counts how many tiles are misplaced compared to the goal state,
+    excluding the blank tile (0).
+
+    @param current_state 3x3 puzzle board represented as a list of lists.
+    @return int Number of tiles not in their correct position.
     """
     misplaced_count = 0
     for row in range(3):
@@ -50,11 +52,13 @@ def hamming(current_state):
 # calculate manhattan distance of a given "current_state"
 def manhattan(current_state):
     """
-    Calculate Manhattan distance heuristic.
-    
-    Input: current_state - 3x3 board (list of lists)
-    Output: total_distance - sum of Manhattan distances (integer)
-    Function: Calculates sum of distances of each tile from its goal position
+    @brief Compute the Manhattan distance heuristic.
+
+    Calculates the sum of the absolute distances between each tile's current
+    position and its target position in the goal state, excluding the blank.
+
+    @param current_state 3x3 puzzle board represented as a list of lists.
+    @return int Sum of Manhattan distances for all tiles.
     """
     total_distance = 0
     for row in range(3):
@@ -73,11 +77,13 @@ def manhattan(current_state):
 # returns possible states for a given "current_state"
 def neighbors(current_state):
     """
-    Generate all possible next states.
-    
-    Input: current_state - 3x3 board
-    Output: possible_states - list of all possible next states
-    Function: Moves blank tile (0) in all valid directions
+    @brief Generate all possible neighboring states for a given configuration.
+
+    Determines all valid puzzle states reachable by moving the blank tile
+    (0) up, down, left, or right.
+
+    @param current_state 3x3 puzzle board represented as a list of lists.
+    @return list List of possible next 3x3 states.
     """
     rows = len(current_state)
     cols = len(current_state[0])
@@ -128,13 +134,15 @@ def neighbors(current_state):
 
 def calculateCosts(possible_states, heuristic, g_cost):
     """
-    Calculate f-cost for each state.
-    
-    Input: possible_states - list of states
-           heuristic - "manhattan" or "hamming"
-           g_cost - current path cost
-    Output: state_costs - list of (state, f_cost) tuples
-    Function: Calculates f(s) = g(s) + h(s) for each state
+    @brief Compute total A* cost f(s) = g(s) + h(s) for each successor state.
+
+    Uses either the Manhattan or Hamming heuristic depending on the parameter.
+
+    @param possible_states List of 3x3 puzzle states to evaluate.
+    @param heuristic String selecting heuristic ("manhattan" or "hamming").
+    @param g_cost Path cost g(s) of the parent state.
+    @return list List of tuples (state, f_cost) for each possible state.
+    @note Terminates the program with exit code 11 if an invalid heuristic is passed.
     """
     state_costs = []
     for state in possible_states:
@@ -152,11 +160,13 @@ def calculateCosts(possible_states, heuristic, g_cost):
 
 def state_to_string(state):
     """
-    Convert state to string for comparison.
-    
-    Input: state - 3x3 board
-    Output: string representation (e.g., "012345678")
-    Function: Converts board to string for fast comparison
+    @brief Convert a puzzle state to a string key.
+
+    Converts a 3x3 board into a flattened string (e.g., "012345678")
+    used for hashing and state comparison.
+
+    @param state 3x3 puzzle board represented as a list of lists.
+    @return str Linear string representation of the state.
     """
     result = ""
     for row in state:
@@ -167,11 +177,13 @@ def state_to_string(state):
 
 def is_solvable(start_state):
     """
-    Check if puzzle is solvable.
-    
-    Input: start_state - 3x3 board
-    Output: True if solvable, False otherwise
-    Function: Counts inversions to determine solvability
+    @brief Determine if a puzzle configuration is solvable.
+
+    Uses inversion counting: a puzzle is solvable if the number of inversions
+    (pairs of tiles in the wrong order) is even.
+
+    @param start_state 3x3 puzzle board represented as a list of lists.
+    @return bool True if the puzzle is solvable, False otherwise.
     """
     inv_count = 0
     value_array = []
@@ -195,11 +207,12 @@ def is_solvable(start_state):
 
 def generateRandomSolvableBoard():
     """
-    Generate random solvable board.
-    
-    Input: None
-    Output: new_board - random 3x3 board
-    Function: Creates random board configuration
+    @brief Generate a random solvable 8-puzzle configuration.
+
+    Randomly shuffles the tiles until a solvable arrangement is found.
+
+    @return list A random 3x3 solvable board (list of lists).
+    @note The function loops until a solvable board is generated.
     """
     while True:
         possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 0]
@@ -222,8 +235,19 @@ def generateRandomSolvableBoard():
 
 def solve_puzzle(start_state, heuristic_name):
     """
-    Solve 8-puzzle using A* algorithm with heapq.
-    Includes parent mapping for optional path reconstruction.
+    @brief Solve the 8-puzzle using the A* search algorithm.
+
+    Implements A* with a priority queue (heapq) and either the Manhattan or
+    Hamming heuristic. Maintains parent mappings for optional path reconstruction.
+
+    @param start_state Starting 3x3 puzzle configuration.
+    @param heuristic_name String selecting the heuristic ("manhattan" or "hamming").
+    @return tuple (success, iterations, nodes_expanded, elapsed_time)
+        - success (bool): True if a solution was found.
+        - iterations (int): Number of A* loop iterations executed.
+        - nodes_expanded (int): Number of states expanded.
+        - elapsed_time (float): Runtime in seconds.
+    @note Returns (False, ..., ...) if no solution is found or max iteration limit is exceeded.
     """
     start_time = time.time()
     start_string = state_to_string(start_state)
@@ -256,7 +280,7 @@ def solve_puzzle(start_state, heuristic_name):
 
     while open_heap:
         iterations += 1
-        if iterations > 1_000_000:
+        if iterations > 100_000:
             return False, iterations, nodes_expanded, time.time() - start_time
 
         current_f, _, current_string, current_state, current_g = heapq.heappop(open_heap)
@@ -305,6 +329,18 @@ def solve_puzzle(start_state, heuristic_name):
 
 
 def run_benchmark(games_to_generate=100, heuristics=["manhattan", "hamming"]):
+    """
+    @brief Run benchmark tests comparing heuristics on randomly generated puzzles.
+
+    Generates a specified number of random solvable boards and solves each using
+    the selected heuristics (Manhattan and/or Hamming). Logs results and prints
+    statistical summaries (mean and standard deviation of nodes expanded and runtime).
+
+    @param games_to_generate Number of random puzzles to generate and solve.
+    @param heuristics List of heuristic names to use ("manhattan", "hamming").
+    @return None
+    @note Creates log entries for each puzzle in ../log/.
+    """
     # Store results
     results_manhattan = []
     results_hamming = []
@@ -414,6 +450,16 @@ def run_benchmark(games_to_generate=100, heuristics=["manhattan", "hamming"]):
 
 
 def get_user_configuration():
+    """
+    @brief Interactive CLI for selecting benchmark configuration.
+
+    Asks the user to input the number of puzzles to generate and to select
+    which heuristics to benchmark. Clears the terminal between selections.
+
+    @return tuple (games_to_generate, heuristics)
+        - games_to_generate (int): Number of puzzles to benchmark.
+        - heuristics (list of str): Selected heuristic names.
+    """
     print("-------------------------------------------------------")
     print("---              Puzzle 8 Solver                    ---") 
     print("-------------------------------------------------------")
@@ -455,6 +501,14 @@ def get_user_configuration():
 
 
 if __name__ == "__main__":
+    """
+    @brief Program entry point.
+
+    Initializes the application, gathers user configuration via console input,
+    and runs the benchmark. Also logs program start and completion events.
+
+    @note Exits with code 0 when finished successfully.
+    """
     os.system('cls' if os.name == 'nt' else 'clear') 
     log.info("Application start.") 
 
